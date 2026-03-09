@@ -886,12 +886,10 @@ const DEFAULT_QUIZZES = [
 
 function getQuizzes() {
   const all = [];
-
   DEFAULT_QUIZZES.forEach((dq) => {
     const stored = localStorage.getItem("ls_quiz_" + dq.id);
     if (stored) {
       const parsed = JSON.parse(stored);
-
       all.push({
         ...dq,
         status: parsed.status || dq.status,
@@ -920,7 +918,7 @@ function renderQuizList() {
     item.innerHTML = `
       <div class="quiz-item-info">
         <h4>${quiz.title}</h4>
-        <p>${isOpen ? "🟢 Quiz is open — enter code to begin" : "🔒 Waiting for admin to open this quiz"}</p>
+        <p>${isOpen ? "🟢 Quiz is open — enter code to begin" : "🔒 Waiting for teacher to open this quiz"}</p>
       </div>
       <span class="quiz-badge ${isOpen ? "badge-open" : "badge-locked"}">${isOpen ? "OPEN" : "LOCKED"}</span>
     `;
@@ -957,10 +955,69 @@ function checkCode() {
     document.getElementById("quiz-code-screen").style.display = "none";
     document.getElementById("quiz-username-screen").style.display = "block";
   } else {
-    alert("❌ Wrong code. Ask your admin for the correct quiz code.");
+    alert("❌ Wrong code. Ask your teacher for the correct quiz code.");
   }
 }
 
+// ── Timer ──────────────────────────────────────────
+const TIMER_SECONDS = 15;
+const CIRCUMFERENCE = 113.1; // 2 * π * 18
+let timerInterval = null;
+let timeLeft = TIMER_SECONDS;
+
+function startTimer() {
+  clearInterval(timerInterval);
+  timeLeft = TIMER_SECONDS;
+  updateTimerUI(timeLeft);
+
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimerUI(timeLeft);
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      timeExpired();
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+}
+
+function updateTimerUI(t) {
+  const arc = document.getElementById("timer-arc");
+  const num = document.getElementById("timer-num");
+  if (!arc || !num) return;
+
+  const offset = CIRCUMFERENCE * (1 - t / TIMER_SECONDS);
+  arc.style.strokeDashoffset = offset;
+  num.textContent = t;
+
+  const isWarn = t <= 8 && t > 4;
+  const isDanger = t <= 4;
+
+  arc.classList.toggle("warn", isWarn);
+  arc.classList.toggle("danger", isDanger);
+  num.classList.toggle("warn", isWarn);
+  num.classList.toggle("danger", isDanger);
+}
+
+function timeExpired() {
+  // Disable all buttons and reveal correct answer — no point awarded
+  const opts = document.getElementById("options");
+  if (!opts) return;
+  [...opts.children].forEach((b) => {
+    b.disabled = true;
+  });
+  const q = activeQuizData.questions[currentQ];
+  if (opts.children[q.a]) opts.children[q.a].classList.add("correct");
+  setTimeout(() => {
+    currentQ++;
+    loadQuestion();
+  }, 1000);
+}
+
+// ── Quiz flow ──────────────────────────────────────
 function beginQuiz() {
   playerName =
     document.getElementById("username-input").value.trim() || "Anonymous";
@@ -992,6 +1049,7 @@ function loadQuestion() {
     btn.className = "opt-btn";
     btn.textContent = opt;
     btn.onclick = () => {
+      stopTimer();
       [...opts.children].forEach((b) => {
         b.disabled = true;
       });
@@ -1009,9 +1067,13 @@ function loadQuestion() {
     };
     opts.appendChild(btn);
   });
+
+  // Start 15-second countdown for this question
+  startTimer();
 }
 
 function showResults() {
+  stopTimer();
   document.getElementById("quiz-main-screen").style.display = "none";
   document.getElementById("quiz-results-screen").style.display = "block";
 
@@ -1058,6 +1120,7 @@ function showResults() {
 }
 
 function resetQuiz() {
+  stopTimer();
   document.getElementById("quiz-results-screen").style.display = "none";
   document.getElementById("quiz-code").value = "";
   document.getElementById("username-input").value = "";
@@ -1065,6 +1128,7 @@ function resetQuiz() {
   renderQuizList();
 }
 
+// ── Discussion ─────────────────────────────────────
 let posts = JSON.parse(localStorage.getItem("ls_posts")) || [];
 
 function renderPosts() {
@@ -1113,6 +1177,7 @@ function deletePost(i) {
 
 renderPosts();
 
+// Auto-refresh quiz status every 10 seconds
 setInterval(() => {
   const quizPanel = document.getElementById("quiz");
   if (quizPanel && quizPanel.classList.contains("active")) {
