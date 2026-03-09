@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LEARN SMART – Admin Panel</title>
+    <link rel="stylesheet" href="./css/admin.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="login-gate">
+      <div class="login-box">
+        <div class="login-icon">🔐</div>
+        <h1>LEARN SMART</h1>
+        <p>Admin Panel — Admin Access Only</p>
+        <div class="field">
+          <label>USERNAME</label>
+          <input
+            type="text"
+            id="login-user"
+            placeholder="Enter username"
+            autocomplete="username"
+          />
+        </div>
+        <div class="field">
+          <label>PASSWORD</label>
+          <input
+            type="password"
+            id="login-pass"
+            placeholder="Enter password"
+            autocomplete="current-password"
+          />
+        </div>
+        <button class="btn btn-full" onclick="doLogin()">Sign In →</button>
+        <p class="err-msg" id="login-err">
+          ❌ Incorrect credentials. Try again.
+        </p>
+        <p style="margin-top: 20px; font-size: 0.78rem; color: var(--muted)">
+          Default: admin / learnsmart2026
+        </p>
+      </div>
+    </div>
+
+    <div id="admin-app">
+      <header class="admin-header">
+        <div class="admin-logo">
+          <div class="icon-wrap">⚛️</div>
+          <div>
+            <h2>LEARN SMART</h2>
+            <span>Admin Control Panel</span>
+          </div>
+        </div>
+        <div class="admin-meta">
+          <span class="admin-badge">👩‍🏫 Admin</span>
+          <button class="btn btn-outline btn-sm" onclick="doLogout()">
+            Sign Out
+          </button>
+        </div>
+      </header>
+
+      <div class="admin-content">
+        <p class="section-title">📊 Overview</p>
+        <div class="stats-row">
+          <div class="stat-card">
+            <span class="val" id="stat-open">0</span>
+            <div class="label">Quizzes Open</div>
+          </div>
+          <div class="stat-card">
+            <span class="val" id="stat-posts">0</span>
+            <div class="label">Discussion Posts</div>
+          </div>
+          <div class="stat-card">
+            <span class="val" id="stat-players">0</span>
+            <div class="label">Quiz Attempts</div>
+          </div>
+        </div>
+
+        <hr class="divider" />
+
+        <p class="section-title">🧪 Quiz Controls</p>
+        <div id="quiz-controls"></div>
+
+        <hr class="divider" />
+
+        <p class="section-title">🏆 Leaderboards</p>
+        <div id="leaderboards"></div>
+
+        <hr class="divider" />
+
+        <p class="section-title">🧬 Discussion Posts</p>
+        <div id="discussion-mod"></div>
+      </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script src="./js/admin.js"></script>
+  </body>
+</html>

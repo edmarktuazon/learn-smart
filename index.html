@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LEARN SMART – Learn Science Anytime, Anywhere</title>
+    <link rel="stylesheet" href="./css/index.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="particles" id="particles"></div>
+
+    <header>
+      <div class="logo-wrap fade-up">
+        <div class="logo-icon">⚛️</div>
+        <h1>
+          <span class="learn">LEARN</span> <span class="smart">SMART</span>
+        </h1>
+      </div>
+      <p class="tagline fade-up" style="animation-delay: 0.1s">
+        Learn Science Smart: Anytime, Anywhere
+      </p>
+    </header>
+
+    <section id="landing">
+      <div class="landing-hero">
+        <p class="hero-title fade-up" style="animation-delay: 0.15s">
+          ✦ What's Inside ✦
+        </p>
+        <div class="features-grid">
+          <div class="feature-card fade-up" onclick="enterApp('lessons')">
+            <span class="feature-icon">📘</span>
+            <h3>Lesson Content</h3>
+            <p>
+              Access all lesson slides anytime — no code needed. Learn at your
+              own pace.
+            </p>
+          </div>
+          <div class="feature-card fade-up" onclick="enterApp('videos')">
+            <span class="feature-icon">🎬</span>
+            <h3>Video Lessons</h3>
+            <p>
+              Watch curated science videos anytime. Visual learning made easy.
+            </p>
+          </div>
+          <div class="feature-card fade-up" onclick="enterApp('quiz')">
+            <span class="feature-icon">🧪</span>
+            <h3>Interactive Quiz</h3>
+            <p>
+              Take quizzes opened by your admin. Enter a code, choose a name,
+              and compete!
+            </p>
+          </div>
+          <div class="feature-card fade-up" onclick="enterApp('discussion')">
+            <span class="feature-icon">🧬</span>
+            <h3>Open Discussion</h3>
+            <p>Share thoughts, ask questions, and learn together as a class.</p>
+          </div>
+        </div>
+        <button class="enter-btn" onclick="enterApp('lessons')">
+          Enter the Classroom →
+        </button>
+      </div>
+    </section>
+
+    <div id="app">
+      <nav>
+        <button
+          class="tab-btn active"
+          data-tab="lessons"
+          onclick="switchTab('lessons')"
+        >
+          <span class="icon">📘</span> <span class="label">Lesson Content</span>
+        </button>
+        <button class="tab-btn" data-tab="videos" onclick="switchTab('videos')">
+          <span class="icon">🎬</span> <span class="label">Video Lessons</span>
+        </button>
+        <button class="tab-btn" data-tab="quiz" onclick="switchTab('quiz')">
+          <span class="icon">🧪</span>
+          <span class="label">Interactive Quiz</span>
+        </button>
+        <button
+          class="tab-btn"
+          data-tab="discussion"
+          onclick="switchTab('discussion')"
+        >
+          <span class="icon">🧬</span> <span class="label">Discussion</span>
+        </button>
+      </nav>
+
+      <div class="main-wrap">
+        <div id="lessons" class="tab-panel active">
+          <h2 class="panel-title">Lesson <span>Content</span></h2>
+          <div class="lessons-list" id="lessons-grid">
+            <div class="lesson-card">
+              <div class="lesson-card-header" onclick="toggleLesson(this)">
+                <div class="lesson-card-left">
+                  <span class="lesson-icon">📄</span>
+                  <div>
+                    <h3>Cell Structure and Functions</h3>
+                    <p class="lesson-sub">Click to view lesson PDF</p>
+                  </div>
+                </div>
+                <span class="lesson-chevron">▾</span>
+              </div>
+              <div class="lesson-card-body">
+                <div class="pdf-toolbar">
+                  <a
+                    class="pdf-dl-btn"
+                    href="./assets/pdf/Cell Structure and Functions.pdf"
+                    download
+                    target="_blank"
+                    >⬇ Download PDF</a
+                  >
+                  <a
+                    class="pdf-dl-btn"
+                    href="./assets/pdf/Cell Structure and Functions.pdf"
+                    target="_blank"
+                    >↗ Open in new tab</a
+                  >
+                </div>
+                <div class="pdf-viewer-wrap">
+                  <iframe
+                    class="pdf-iframe"
+                    src="./assets/pdf/Cell Structure and Functions.pdf#toolbar=1&navpanes=0&view=FitH"
+                    allowfullscreen
+                  ></iframe>
+                </div>
+              </div>
+            </div>
+
+            <div class="lesson-card">
+              <div class="lesson-card-header" onclick="toggleLesson(this)">
+                <div class="lesson-card-left">
+                  <span class="lesson-icon">📄</span>
+                  <div>
+                    <h3>Earth's Layers</h3>
+                    <p class="lesson-sub">Click to view lesson PDF</p>
+                  </div>
+                </div>
+                <span class="lesson-chevron">▾</span>
+              </div>
+              <div class="lesson-card-body">
+                <div class="pdf-toolbar">
+                  <a
+                    class="pdf-dl-btn"
+                    href="./assets/pdf/Earth Layers.pdf"
+                    download
+                    target="_blank"
+                    >⬇ Download PDF</a
+                  >
+                  <a
+                    class="pdf-dl-btn"
+                    href="./assets/pdf/Earth Layers.pdf"
+                    target="_blank"
+                    >↗ Open in new tab</a
+                  >
+                </div>
+                <div class="pdf-viewer-wrap">
+                  <iframe
+                    class="pdf-iframe"
+                    src="./assets/pdf/Earth Layers.pdf#toolbar=1&navpanes=0&view=FitH"
+                    allowfullscreen
+                  ></iframe>
+                </div>
+              </div>
+            </div>
+
+            <div class="lesson-card">
+              <div class="lesson-card-header" onclick="toggleLesson(this)">
+                <div class="lesson-card-left">
+                  <span class="lesson-icon">📄</span>
+                  <div>
+                    <h3>Rocks and the Rock Cycle</h3>
+                    <p class="lesson-sub">Click to view lesson PDF</p>
+                  </div>
+                </div>
+                <span class="lesson-chevron">▾</span>
+              </div>
+              <div class="lesson-card-body">
+                <div class="pdf-toolbar">
+                  <a
+                    class="pdf-dl-btn"
+                    href="./assets/pdf/Rocks and the Rock Cycle.pdf"
+                    download
+                    target="_blank"
+                    >⬇ Download PDF</a
+                  >
+                  <a
+                    class="pdf-dl-btn"
+                    href="./assets/pdf/Rocks and the Rock Cycle.pdf"
+                    target="_blank"
+                    >↗ Open in new tab</a
+                  >
+                </div>
+                <div class="pdf-viewer-wrap">
+                  <iframe
+                    class="pdf-iframe"
+                    src="./assets/pdf/Rocks and the Rock Cycle.pdf#toolbar=1&navpanes=0&view=FitH"
+                    allowfullscreen
+                  ></iframe>
+                </div>
+              </div>
+            </div>
+
+            <div class="lesson-card">
+              <div class="lesson-card-header" onclick="toggleLesson(this)">
+                <div class="lesson-card-left">
+                  <span class="lesson-icon">📄</span>
+                  <div>
+                    <h3>Weathering and Erosion</h3>
+                    <p class="lesson-sub">Click to view lesson PDF</p>
+                  </div>
+                </div>
+                <span class="lesson-chevron">▾</span>
+              </div>
+              <div class="lesson-card-body">
+                <div class="pdf-toolbar">
+                  <a
+                    class="pdf-dl-btn"
+                    href="./assets/pdf/Weathering and Erosion.pdf"
+                    download
+                    target="_blank"
+                    >⬇ Download PDF</a
+                  >
+                  <a
+                    class="pdf-dl-btn"
+                    href="./assets/pdf/Weathering and Erosion.pdf"
+                    target="_blank"
+                    >↗ Open in new tab</a
+                  >
+                </div>
+                <div class="pdf-viewer-wrap">
+                  <iframe
+                    class="pdf-iframe"
+                    src="./assets/pdf/Weathering and Erosion.pdf#toolbar=1&navpanes=0&view=FitH"
+                    allowfullscreen
+                  ></iframe>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="videos" class="tab-panel">
+          <h2 class="panel-title">Video <span>Lessons</span></h2>
+          <div class="videos-list">
+            <div class="video-card">
+              <div class="video-card-header" onclick="toggleVideo(this)">
+                <div class="video-card-left">
+                  <span class="video-thumb-icon">🎬</span>
+                  <div>
+                    <h3>Cell Structure and Functions</h3>
+                    <p class="video-sub">Click to watch the video lesson</p>
+                  </div>
+                </div>
+                <span class="video-chevron">▾</span>
+              </div>
+              <div class="video-card-body">
+                <video
+                  class="lesson-video"
+                  controls
+                  preload="metadata"
+                  controlslist="nodownload"
+                >
+                  <source
+                    src="./assets/videos/Cell Structure and Functions.mp4"
+                    type="video/mp4"
+                  />
+                  Your browser does not support video playback.
+                </video>
+              </div>
+            </div>
+
+            <div class="video-card">
+              <div class="video-card-header" onclick="toggleVideo(this)">
+                <div class="video-card-left">
+                  <span class="video-thumb-icon">🎬</span>
+                  <div>
+                    <h3>Earth's Layers</h3>
+                    <p class="video-sub">Click to watch the video lesson</p>
+                  </div>
+                </div>
+                <span class="video-chevron">▾</span>
+              </div>
+              <div class="video-card-body">
+                <video
+                  class="lesson-video"
+                  controls
+                  preload="metadata"
+                  controlslist="nodownload"
+                >
+                  <source
+                    src="./assets/videos/Earth layers.mp4"
+                    type="video/mp4"
+                  />
+                  Your browser does not support video playback.
+                </video>
+              </div>
+            </div>
+
+            <div class="video-card">
+              <div class="video-card-header" onclick="toggleVideo(this)">
+                <div class="video-card-left">
+                  <span class="video-thumb-icon">🎬</span>
+                  <div>
+                    <h3>Rocks and the Rock Cycle</h3>
+                    <p class="video-sub">Click to watch the video lesson</p>
+                  </div>
+                </div>
+                <span class="video-chevron">▾</span>
+              </div>
+              <div class="video-card-body">
+                <video
+                  class="lesson-video"
+                  controls
+                  preload="metadata"
+                  controlslist="nodownload"
+                >
+                  <source
+                    src="./assets/videos/Rocks and the Rock Cycle.mp4"
+                    type="video/mp4"
+                  />
+                  Your browser does not support video playback.
+                </video>
+              </div>
+            </div>
+
+            <div class="video-card">
+              <div class="video-card-header" onclick="toggleVideo(this)">
+                <div class="video-card-left">
+                  <span class="video-thumb-icon">🎬</span>
+                  <div>
+                    <h3>Weathering and Erosion</h3>
+                    <p class="video-sub">Click to watch the video lesson</p>
+                  </div>
+                </div>
+                <span class="video-chevron">▾</span>
+              </div>
+              <div class="video-card-body">
+                <video
+                  class="lesson-video"
+                  controls
+                  preload="metadata"
+                  controlslist="nodownload"
+                >
+                  <source
+                    src="./assets/videos/Weathering and Erosion.mp4"
+                    type="video/mp4"
+                  />
+                  Your browser does not support video playback.
+                </video>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="quiz" class="tab-panel">
+          <h2 class="panel-title">Interactive <span>Quiz</span></h2>
+          <div class="quiz-wrap">
+            <div id="quiz-select">
+              <div class="quiz-list" id="quiz-list">
+                <!-- Dynamically rendered from admin config -->
+              </div>
+            </div>
+
+            <div id="quiz-code-screen" style="display: none">
+              <div class="quiz-box">
+                <h3 id="selected-quiz-title">Quiz</h3>
+                <p>Enter the code given by your admin to begin.</p>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    id="quiz-code"
+                    placeholder="e.g. SMART2026"
+                    autocomplete="off"
+                  />
+                  <button class="btn" onclick="checkCode()">Enter</button>
+                </div>
+                <br />
+                <button class="btn btn-ghost" onclick="backToSelect()">
+                  ← Back
+                </button>
+              </div>
+            </div>
+
+            <div id="quiz-username-screen" style="display: none">
+              <div class="quiz-box">
+                <h3>Choose your display name</h3>
+                <p>You can use any name or nickname.</p>
+                <div class="input-row">
+                  <input
+                    type="text"
+                    id="username-input"
+                    placeholder="Anonymous"
+                  />
+                  <button class="btn" onclick="beginQuiz()">
+                    Start Quiz →
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div id="quiz-main-screen" style="display: none">
+              <div class="quiz-box" style="text-align: left">
+                <div class="progress-bar"><div id="progress-fill"></div></div>
+                <div class="quiz-meta">
+                  <span id="progress-text">Question 1 of 20</span>
+                  <span id="score-display">Score: 0</span>
+                </div>
+                <p class="question-text" id="question-text"></p>
+                <div class="options" id="options"></div>
+              </div>
+            </div>
+
+            <div id="quiz-results-screen" style="display: none">
+              <div class="quiz-box">
+                <div class="result-emoji" id="result-emoji">🏆</div>
+                <div class="result-score">
+                  <span id="final-score">0</span>/<span id="final-total"
+                    >20</span
+                  >
+                </div>
+                <div class="result-pct" id="result-pct"></div>
+                <div class="result-msg" id="result-msg"></div>
+                <h4
+                  style="
+                    text-align: center;
+                    margin-bottom: 14px;
+                    color: var(--muted);
+                    font-size: 0.9rem;
+                    letter-spacing: 1px;
+                    text-transform: uppercase;
+                  "
+                >
+                  Top 3 Leaderboard
+                </h4>
+                <ul class="leaderboard" id="leaderboard"></ul>
+                <button class="btn" onclick="resetQuiz()" style="width: 100%">
+                  Try Again
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="discussion" class="tab-panel">
+          <h2 class="panel-title">Open <span>Discussion</span></h2>
+          <div class="post-form">
+            <textarea
+              id="post-msg"
+              placeholder="Share your thoughts, questions, or ideas..."
+            ></textarea>
+            <div class="post-actions">
+              <button class="btn" onclick="addPost()">Post Anonymously</button>
+            </div>
+          </div>
+          <div id="posts-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>© 2026 LEARN SMART &nbsp;•&nbsp; Science Made Simple 🔬</p>
+    </footer>
+
+    <script src="./js/index..js"></script>
+  </body>
+</html>
