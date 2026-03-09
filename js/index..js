@@ -29,7 +29,6 @@ function toggleLesson(header) {
   const chevron = header.querySelector(".lesson-chevron");
   const isOpen = body.classList.contains("open");
 
-  // Close all others first
   document
     .querySelectorAll(".lesson-card-body.open")
     .forEach((b) => b.classList.remove("open"));
@@ -40,7 +39,6 @@ function toggleLesson(header) {
   if (!isOpen) {
     body.classList.add("open");
     chevron.classList.add("open");
-
     setTimeout(
       () => card.scrollIntoView({ behavior: "smooth", block: "start" }),
       100,
@@ -74,7 +72,6 @@ for (let i = 0; i < 18; i++) {
   container.appendChild(p);
 }
 
-// ── Navigation ─────────────────────────────────────
 function enterApp(tab) {
   document.getElementById("landing").style.display = "none";
   document.getElementById("app").style.display = "block";
@@ -267,8 +264,6 @@ const DEFAULT_QUIZZES = [
       },
     ],
   },
-
-  // ── QUIZ 2: Cell Structures and Functions (26 questions) ──
   {
     id: "quiz2",
     title: "Cell Structures and Functions",
@@ -452,8 +447,6 @@ const DEFAULT_QUIZZES = [
       },
     ],
   },
-
-  // ── QUIZ 3: Rocks and the Rock Cycle (25 questions) ──
   {
     id: "quiz3",
     title: "Rocks and the Rock Cycle",
@@ -672,8 +665,6 @@ const DEFAULT_QUIZZES = [
       },
     ],
   },
-
-  // ── QUIZ 4: Earth's Layers (25 questions) ──
   {
     id: "quiz4",
     title: "Earth's Layers",
@@ -894,6 +885,8 @@ function getQuizzes() {
         ...dq,
         status: parsed.status || dq.status,
         code: parsed.code || dq.code,
+        paused: parsed.paused || false,
+        currentQuestion: parsed.currentQuestion || 0,
       });
     } else {
       all.push(dq);
@@ -961,15 +954,13 @@ function checkCode() {
 
 // ── Timer ──────────────────────────────────────────
 const TIMER_SECONDS = 15;
-const CIRCUMFERENCE = 113.1; // 2 * π * 18
+const CIRCUMFERENCE = 113.1;
 let timerInterval = null;
-let timeLeft = TIMER_SECONDS;
 
 function startTimer() {
   clearInterval(timerInterval);
-  timeLeft = TIMER_SECONDS;
+  let timeLeft = TIMER_SECONDS;
   updateTimerUI(timeLeft);
-
   timerInterval = setInterval(() => {
     timeLeft--;
     updateTimerUI(timeLeft);
@@ -984,26 +975,75 @@ function stopTimer() {
   clearInterval(timerInterval);
 }
 
+// ── Pause polling ──────────────────────────────────
+let pausePollInterval = null;
+let isPaused = false;
+
+function setOverlay(show) {
+  const overlay = document.getElementById("pause-overlay");
+  if (!overlay) return;
+  overlay.style.display = show ? "flex" : "none";
+}
+
+function applyPauseState(paused) {
+  const shouldPause = paused === true;
+  if (shouldPause && !isPaused) {
+    isPaused = true;
+    stopTimer();
+    setOverlay(true);
+  } else if (!shouldPause && isPaused) {
+    isPaused = false;
+    setOverlay(false);
+    startTimer(); // fresh 15s on resume
+  }
+}
+
+function startPollPause() {
+  clearInterval(pausePollInterval);
+  isPaused = false;
+  setOverlay(false);
+
+  // Immediate check — don't wait 2 seconds
+  const storedInit = localStorage.getItem("ls_quiz_" + activeQuizData.id);
+  if (storedInit) {
+    const parsedInit = JSON.parse(storedInit);
+    if (parsedInit.paused === true) {
+      isPaused = true;
+      stopTimer();
+      setOverlay(true);
+    }
+  }
+
+  pausePollInterval = setInterval(() => {
+    const stored = localStorage.getItem("ls_quiz_" + activeQuizData.id);
+    if (!stored) return;
+    const parsed = JSON.parse(stored);
+    applyPauseState(parsed.paused === true);
+  }, 2000);
+}
+
+function stopPollPause() {
+  clearInterval(pausePollInterval);
+  isPaused = false;
+  setOverlay(false);
+}
+// ──────────────────────────────────────────────────
+
 function updateTimerUI(t) {
   const arc = document.getElementById("timer-arc");
   const num = document.getElementById("timer-num");
   if (!arc || !num) return;
-
-  const offset = CIRCUMFERENCE * (1 - t / TIMER_SECONDS);
-  arc.style.strokeDashoffset = offset;
+  arc.style.strokeDashoffset = CIRCUMFERENCE * (1 - t / TIMER_SECONDS);
   num.textContent = t;
-
-  const isWarn = t <= 8 && t > 4;
-  const isDanger = t <= 4;
-
-  arc.classList.toggle("warn", isWarn);
-  arc.classList.toggle("danger", isDanger);
-  num.classList.toggle("warn", isWarn);
-  num.classList.toggle("danger", isDanger);
+  const warn = t <= 8 && t > 4;
+  const danger = t <= 4;
+  arc.classList.toggle("warn", warn);
+  arc.classList.toggle("danger", danger);
+  num.classList.toggle("warn", warn);
+  num.classList.toggle("danger", danger);
 }
 
 function timeExpired() {
-  // Disable all buttons and reveal correct answer — no point awarded
   const opts = document.getElementById("options");
   if (!opts) return;
   [...opts.children].forEach((b) => {
@@ -1016,16 +1056,21 @@ function timeExpired() {
     loadQuestion();
   }, 1000);
 }
+// ──────────────────────────────────────────────────
 
-// ── Quiz flow ──────────────────────────────────────
 function beginQuiz() {
   playerName =
     document.getElementById("username-input").value.trim() || "Anonymous";
   document.getElementById("quiz-username-screen").style.display = "none";
   document.getElementById("quiz-main-screen").style.display = "block";
-  currentQ = 0;
+  // Sync to class's current question (late joiner support)
+  const stored = localStorage.getItem("ls_quiz_" + activeQuizData.id);
+  const classQ = stored ? JSON.parse(stored).currentQuestion || 0 : 0;
+  currentQ = classQ;
   score = 0;
+  setOverlay(false); // always start with overlay hidden
   loadQuestion();
+  startPollPause();
 }
 
 function loadQuestion() {
@@ -1041,6 +1086,17 @@ function loadQuestion() {
   document.getElementById("progress-fill").style.width =
     `${((currentQ + 1) / questions.length) * 100}%`;
   document.getElementById("score-display").textContent = `Score: ${score}`;
+
+  // Broadcast current question number so late joiners can sync
+  const storedQ = localStorage.getItem("ls_quiz_" + activeQuizData.id);
+  if (storedQ) {
+    const parsedQ = JSON.parse(storedQ);
+    parsedQ.currentQuestion = currentQ;
+    localStorage.setItem(
+      "ls_quiz_" + activeQuizData.id,
+      JSON.stringify(parsedQ),
+    );
+  }
 
   const opts = document.getElementById("options");
   opts.innerHTML = "";
@@ -1068,12 +1124,12 @@ function loadQuestion() {
     opts.appendChild(btn);
   });
 
-  // Start 15-second countdown for this question
   startTimer();
 }
 
 function showResults() {
   stopTimer();
+  stopPollPause();
   document.getElementById("quiz-main-screen").style.display = "none";
   document.getElementById("quiz-results-screen").style.display = "block";
 
@@ -1121,6 +1177,7 @@ function showResults() {
 
 function resetQuiz() {
   stopTimer();
+  stopPollPause();
   document.getElementById("quiz-results-screen").style.display = "none";
   document.getElementById("quiz-code").value = "";
   document.getElementById("username-input").value = "";
@@ -1128,7 +1185,6 @@ function resetQuiz() {
   renderQuizList();
 }
 
-// ── Discussion ─────────────────────────────────────
 let posts = JSON.parse(localStorage.getItem("ls_posts")) || [];
 
 function renderPosts() {
@@ -1177,7 +1233,6 @@ function deletePost(i) {
 
 renderPosts();
 
-// Auto-refresh quiz status every 10 seconds
 setInterval(() => {
   const quizPanel = document.getElementById("quiz");
   if (quizPanel && quizPanel.classList.contains("active")) {

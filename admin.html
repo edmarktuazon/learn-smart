@@ -4,25 +4,475 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LEARN SMART – Admin Panel</title>
-    <link rel="stylesheet" href="./css/admin.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
       href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap"
       rel="stylesheet"
     />
+    <style>
+      :root {
+        --blue: #3b82f6;
+        --blue-light: #60a5fa;
+        --blue-dark: #1d4ed8;
+        --green: #22c55e;
+        --green-dim: rgba(34, 197, 94, 0.15);
+        --red: #ef4444;
+        --red-dim: rgba(239, 68, 68, 0.15);
+        --bg: #04080f;
+        --surface: rgba(12, 25, 50, 0.8);
+        --border: rgba(59, 130, 246, 0.2);
+        --text: #e2e8f0;
+        --muted: #64748b;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(
+          ellipse 70% 50% at 50% 0%,
+          rgba(29, 78, 216, 0.12) 0%,
+          transparent 70%
+        );
+        pointer-events: none;
+      }
+
+      /* ── Login Gate ── */
+      #login-gate {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .login-box {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 48px 40px;
+        width: 100%;
+        max-width: 420px;
+        text-align: center;
+        backdrop-filter: blur(16px);
+        box-shadow: 0 0 60px rgba(59, 130, 246, 0.12);
+      }
+
+      .login-icon {
+        font-size: 3rem;
+        margin-bottom: 12px;
+      }
+
+      .login-box h1 {
+        font-family: "Orbitron", monospace;
+        font-size: 1.6rem;
+        font-weight: 900;
+        color: var(--blue-light);
+        margin-bottom: 6px;
+      }
+
+      .login-box p {
+        color: var(--muted);
+        margin-bottom: 32px;
+        font-size: 0.95rem;
+      }
+
+      .field {
+        margin-bottom: 14px;
+        text-align: left;
+      }
+
+      .field label {
+        display: block;
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-bottom: 6px;
+        letter-spacing: 0.5px;
+      }
+
+      input[type="text"],
+      input[type="password"] {
+        width: 100%;
+        padding: 13px 16px;
+        border-radius: 10px;
+        border: 1px solid #1e3a5f;
+        background: rgba(4, 10, 25, 0.9);
+        color: var(--text);
+        font-size: 1rem;
+        font-family: "DM Sans", sans-serif;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+
+      input:focus {
+        border-color: var(--blue-light);
+        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.12);
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 13px 28px;
+        border-radius: 10px;
+        border: none;
+        background: linear-gradient(135deg, var(--blue-dark), var(--blue));
+        color: white;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.3s;
+        font-family: "DM Sans", sans-serif;
+      }
+
+      .btn:hover {
+        transform: scale(1.03);
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+      }
+      .btn:active {
+        transform: scale(0.98);
+      }
+
+      .btn-full {
+        width: 100%;
+        justify-content: center;
+        margin-top: 8px;
+      }
+
+      .btn-green {
+        background: linear-gradient(135deg, #15803d, var(--green));
+      }
+
+      .btn-red {
+        background: linear-gradient(135deg, #991b1b, var(--red));
+      }
+
+      .btn-yellow {
+        background: linear-gradient(135deg, #92400e, #f59e0b);
+      }
+
+      .btn-outline {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--muted);
+      }
+
+      .btn-outline:hover {
+        border-color: var(--blue-light);
+        color: var(--text);
+        box-shadow: none;
+      }
+
+      .btn-sm {
+        padding: 8px 16px;
+        font-size: 0.88rem;
+      }
+
+      .err-msg {
+        color: #f87171;
+        font-size: 0.88rem;
+        margin-top: 10px;
+        display: none;
+      }
+
+      /* ── Admin App ── */
+      #admin-app {
+        display: none;
+      }
+
+      /* Header */
+      .admin-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 32px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(4, 10, 25, 0.9);
+        backdrop-filter: blur(12px);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      .admin-logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .admin-logo .icon-wrap {
+        width: 38px;
+        height: 38px;
+        background: linear-gradient(
+          135deg,
+          var(--blue-dark),
+          var(--blue-light)
+        );
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+      }
+
+      .admin-logo h2 {
+        font-family: "Orbitron", monospace;
+        font-size: 1.1rem;
+        font-weight: 900;
+        color: var(--blue-light);
+      }
+
+      .admin-logo span {
+        font-size: 0.75rem;
+        color: var(--muted);
+        display: block;
+        font-family: "DM Sans", sans-serif;
+        font-weight: 400;
+        letter-spacing: 0.5px;
+      }
+
+      .admin-meta {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .admin-badge {
+        background: rgba(59, 130, 246, 0.15);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 20px;
+        padding: 5px 14px;
+        font-size: 0.82rem;
+        color: var(--blue-light);
+        font-weight: 600;
+      }
+
+      /* Content */
+      .admin-content {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 40px 24px 80px;
+      }
+
+      .section-title {
+        font-family: "Orbitron", monospace;
+        font-size: 0.8rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 20px;
+      }
+
+      /* Quiz Control Cards */
+      .quiz-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 28px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(12px);
+      }
+
+      .quiz-card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+
+      .quiz-card-title {
+        font-size: 1.15rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      .quiz-card-sub {
+        font-size: 0.88rem;
+        color: var(--muted);
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .pill-open {
+        background: var(--green-dim);
+        border: 1px solid rgba(34, 197, 94, 0.35);
+        color: #4ade80;
+      }
+
+      .pill-locked {
+        background: rgba(100, 116, 139, 0.12);
+        border: 1px solid rgba(100, 116, 139, 0.25);
+        color: var(--muted);
+      }
+
+      .pill-paused {
+        background: rgba(245, 158, 11, 0.12);
+        border: 1px solid rgba(245, 158, 11, 0.35);
+        color: #f59e0b;
+      }
+
+      .quiz-card-body {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        align-items: end;
+      }
+
+      @media (max-width: 560px) {
+        .quiz-card-body {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .field-group label {
+        display: block;
+        font-size: 0.82rem;
+        color: var(--muted);
+        margin-bottom: 6px;
+        letter-spacing: 0.5px;
+      }
+
+      .quiz-card-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      /* Divider */
+      .divider {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 36px 0;
+      }
+
+      /* Stats row */
+      .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 16px;
+        margin-bottom: 36px;
+      }
+
+      .stat-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 20px;
+        text-align: center;
+        backdrop-filter: blur(10px);
+      }
+
+      .stat-card .val {
+        font-family: "Orbitron", monospace;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--blue-light);
+        display: block;
+      }
+
+      .stat-card .label {
+        font-size: 0.82rem;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+
+      /* Leaderboard preview */
+      .lb-preview {
+        display: grid;
+        gap: 10px;
+      }
+
+      .lb-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(15, 30, 65, 0.5);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 16px;
+      }
+
+      .lb-rank {
+        font-size: 1.2rem;
+        width: 28px;
+      }
+      .lb-name {
+        flex: 1;
+        font-weight: 500;
+      }
+      .lb-score {
+        color: var(--blue-light);
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+
+      .lb-empty {
+        color: var(--muted);
+        font-size: 0.9rem;
+        text-align: center;
+        padding: 20px;
+      }
+
+      /* Toast */
+      #toast {
+        position: fixed;
+        bottom: 28px;
+        left: 50%;
+        transform: translateX(-50%) translateY(80px);
+        background: rgba(15, 30, 65, 0.95);
+        border: 1px solid var(--blue);
+        border-radius: 12px;
+        padding: 12px 24px;
+        color: var(--text);
+        font-size: 0.95rem;
+        font-weight: 500;
+        z-index: 9999;
+        transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        backdrop-filter: blur(12px);
+        white-space: nowrap;
+      }
+
+      #toast.show {
+        transform: translateX(-50%) translateY(0);
+      }
+    </style>
   </head>
   <body>
+    <!-- ── Login Gate ── -->
     <div id="login-gate">
       <div class="login-box">
         <div class="login-icon">🔐</div>
         <h1>LEARN SMART</h1>
-        <p>Admin Panel — Admin Access Only</p>
+        <p>Admin Panel — Teacher Access Only</p>
         <div class="field">
           <label>USERNAME</label>
           <input
             type="text"
             id="login-user"
-            placeholder="Enter username"
+            placeholder="admin"
             autocomplete="username"
           />
         </div>
@@ -31,7 +481,7 @@
           <input
             type="password"
             id="login-pass"
-            placeholder="Enter password"
+            placeholder="••••••••"
             autocomplete="current-password"
           />
         </div>
@@ -45,6 +495,7 @@
       </div>
     </div>
 
+    <!-- ── Admin App ── -->
     <div id="admin-app">
       <header class="admin-header">
         <div class="admin-logo">
@@ -55,7 +506,7 @@
           </div>
         </div>
         <div class="admin-meta">
-          <span class="admin-badge">👩‍🏫 Admin</span>
+          <span class="admin-badge">👩‍🏫 Teacher</span>
           <button class="btn btn-outline btn-sm" onclick="doLogout()">
             Sign Out
           </button>
@@ -63,6 +514,7 @@
       </header>
 
       <div class="admin-content">
+        <!-- Stats -->
         <p class="section-title">📊 Overview</p>
         <div class="stats-row">
           <div class="stat-card">
@@ -81,16 +533,19 @@
 
         <hr class="divider" />
 
+        <!-- Quiz Controls -->
         <p class="section-title">🧪 Quiz Controls</p>
         <div id="quiz-controls"></div>
 
         <hr class="divider" />
 
+        <!-- Leaderboards -->
         <p class="section-title">🏆 Leaderboards</p>
         <div id="leaderboards"></div>
 
         <hr class="divider" />
 
+        <!-- Discussion Moderation -->
         <p class="section-title">🧬 Discussion Posts</p>
         <div id="discussion-mod"></div>
       </div>

@@ -59,16 +59,27 @@ function getQuizState(id) {
   const raw = localStorage.getItem("ls_quiz_" + id);
   if (raw) return JSON.parse(raw);
   const meta = QUIZZES_META.find((q) => q.id === id);
-  return { id, status: "locked", code: meta.defaultCode };
+  return {
+    id,
+    status: "locked",
+    code: meta.defaultCode,
+    paused: false,
+    currentQuestion: 0,
+  };
 }
 
 function saveQuizState(id, patch) {
   const current = getQuizState(id);
-
+  // Only store status, code, paused, currentQuestion — NEVER questions
   const updated = {
     id,
     status: patch.status !== undefined ? patch.status : current.status,
     code: patch.code !== undefined ? patch.code : current.code,
+    paused: patch.paused !== undefined ? patch.paused : current.paused || false,
+    currentQuestion:
+      patch.currentQuestion !== undefined
+        ? patch.currentQuestion
+        : current.currentQuestion || 0,
   };
   localStorage.setItem("ls_quiz_" + id, JSON.stringify(updated));
 }
@@ -101,6 +112,7 @@ function renderQuizControls() {
   QUIZZES_META.forEach((meta) => {
     const state = getQuizState(meta.id);
     const isOpen = state.status === "open";
+    const isPaused = state.paused || false;
 
     const card = document.createElement("div");
     card.className = "quiz-card";
@@ -111,8 +123,8 @@ function renderQuizControls() {
           <div class="quiz-card-title">${meta.title}</div>
           <div class="quiz-card-sub">${meta.questions} questions</div>
         </div>
-        <span class="status-pill ${isOpen ? "pill-open" : "pill-locked"}">
-          ${isOpen ? "🟢 OPEN" : "🔒 LOCKED"}
+        <span class="status-pill ${isOpen ? (isPaused ? "pill-paused" : "pill-open") : "pill-locked"}">
+          ${isOpen ? (isPaused ? "⏸ PAUSED" : "🟢 OPEN") : "🔒 LOCKED"}
         </span>
       </div>
       <div class="quiz-card-body">
@@ -125,6 +137,13 @@ function renderQuizControls() {
             isOpen
               ? `<button class="btn btn-red btn-sm" onclick="lockQuiz('${meta.id}')">🔒 Lock Quiz</button>`
               : `<button class="btn btn-green btn-sm" onclick="openQuiz('${meta.id}')">🟢 Open Quiz</button>`
+          }
+          ${
+            isOpen
+              ? isPaused
+                ? `<button class="btn btn-green btn-sm" onclick="resumeQuiz('${meta.id}')">▶ Resume Quiz</button>`
+                : `<button class="btn btn-yellow btn-sm" onclick="pauseQuiz('${meta.id}')">⏸ Pause Quiz</button>`
+              : ""
           }
           <button class="btn btn-outline btn-sm" onclick="saveCode('${meta.id}')">💾 Save Code</button>
           <button class="btn btn-outline btn-sm" onclick="clearLB('${meta.id}')">🗑 Clear LB</button>
@@ -144,14 +163,31 @@ function openQuiz(id) {
     toast("⚠️ Please enter a code first.");
     return;
   }
-  saveQuizState(id, { status: "open", code });
+  saveQuizState(id, {
+    status: "open",
+    code,
+    paused: false,
+    currentQuestion: 0,
+  });
   toast("✅ Quiz opened! Students can now enter the code.");
   renderAll();
 }
 
 function lockQuiz(id) {
-  saveQuizState(id, { status: "locked" });
+  saveQuizState(id, { status: "locked", paused: false, currentQuestion: 0 });
   toast("🔒 Quiz locked.");
+  renderAll();
+}
+
+function pauseQuiz(id) {
+  saveQuizState(id, { paused: true });
+  toast("⏸ Quiz paused — students will see a pause overlay.");
+  renderAll();
+}
+
+function resumeQuiz(id) {
+  saveQuizState(id, { paused: false });
+  toast("▶ Quiz resumed — students can continue.");
   renderAll();
 }
 
