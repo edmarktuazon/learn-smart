@@ -1088,21 +1088,18 @@ function startPollPause(initialTimerStart) {
     let row = await sbGetQuizState(activeQuizData.id);
     let paused, tStart;
 
-    let remoteQ = null;
     if (row) {
       paused = row.paused === true;
       tStart = row.timer_start || null;
-      remoteQ = row.current_question || 0;
     } else {
       const stored = localStorage.getItem("ls_quiz_" + activeQuizData.id);
       if (!stored) return;
       const parsed = JSON.parse(stored);
       paused = parsed.paused === true;
       tStart = parsed.timerStart || null;
-      remoteQ = parsed.currentQuestion || 0;
     }
 
-    // Quiz locked mid-session
+    // Quiz locked mid-session — show ended screen
     if (row && row.status === "locked") {
       const mainScreen = document.getElementById("quiz-main-screen");
       if (mainScreen && mainScreen.style.display !== "none") {
@@ -1111,16 +1108,7 @@ function startPollPause(initialTimerStart) {
       }
     }
 
-    // Jump forward if class is ahead — never go backward
-    if (remoteQ !== null && remoteQ > currentQ) {
-      isPaused = false;
-      setOverlay(false);
-      stopTimer();
-      currentQ = remoteQ;
-      loadQuestion(tStart);
-      return;
-    }
-
+    // Only sync pause/resume — each student controls their own question progress
     applyPauseState(paused, tStart);
   }, 3000);
 }
@@ -1148,15 +1136,24 @@ const updateTimerUI = (t) => {
 const timeExpired = () => {
   const opts = document.getElementById("options");
   if (!opts) return;
+  const q = activeQuizData.questions[currentQ];
+
+  // Disable all buttons and highlight correct answer
   [...opts.children].forEach((b) => {
     b.disabled = true;
   });
-  const q = activeQuizData.questions[currentQ];
   if (opts.children[q.a]) opts.children[q.a].classList.add("correct");
+
+  // Show "Time's up!" label briefly
+  const timerLabel = document.querySelector(".timer-label");
+  if (timerLabel) timerLabel.textContent = "Time's up!";
+
+  // Give 2.5s to see the correct answer before moving on
   setTimeout(() => {
+    if (timerLabel) timerLabel.textContent = "seconds left";
     currentQ++;
     loadQuestion(null);
-  }, 1000);
+  }, 2500);
 };
 
 const beginQuiz = async () => {
@@ -1222,7 +1219,7 @@ function loadQuestion(tStart) {
     tStart = new Date().toISOString();
   }
 
-  // Save currentQuestion + timerStart to localStorage AND Supabase for late joiner sync
+  // Save to localStorage only — each student manages their own progress
   const storedQ = localStorage.getItem("ls_quiz_" + activeQuizData.id);
   if (storedQ) {
     const parsedQ = JSON.parse(storedQ);
@@ -1232,20 +1229,6 @@ function loadQuestion(tStart) {
       "ls_quiz_" + activeQuizData.id,
       JSON.stringify(parsedQ),
     );
-  }
-
-  // Push to Supabase so all devices see the latest question + timer
-  const sb = getSB();
-  if (sb) {
-    sb.from("quiz_state")
-      .update({
-        current_question: currentQ,
-        timer_start: tStart,
-      })
-      .eq("quiz_id", activeQuizData.id)
-      .then(({ error }) => {
-        if (error) console.warn("Supabase question sync error:", error.message);
-      });
   }
 
   const opts = document.getElementById("options");
@@ -1268,8 +1251,8 @@ function loadQuestion(tStart) {
       }
       setTimeout(() => {
         currentQ++;
-        loadQuestion(null); // null = generate fresh timerStart for new question
-      }, 900);
+        loadQuestion(null);
+      }, 1500);
     };
     opts.appendChild(btn);
   });
@@ -1328,7 +1311,6 @@ const showResults = () => {
   lb = lb.slice(0, 3);
   localStorage.setItem(lbKey, JSON.stringify(lb));
 
-  // Try to show top 3 from Supabase, fallback to localStorage
   const ul = document.getElementById("leaderboard");
   const renderResultsLB = async () => {
     let entries = lb;
@@ -1346,11 +1328,12 @@ const showResults = () => {
           pct: r.pct,
         }));
     }
+    const ranks = ["1st", "2nd", "3rd"];
     ul.innerHTML = entries
       .map(
         (e, i) => `
       <li class="lb-item">
-        <span class="lb-rank">${["", "", ""][i] || ""}</span>
+        <span class="lb-rank">${ranks[i] || `${i + 1}.`}</span>
         <span class="lb-name">${e.name}</span>
         <span class="lb-score">${e.score}/${total} (${e.pct}%)</span>
       </li>`,
