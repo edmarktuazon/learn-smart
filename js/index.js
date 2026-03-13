@@ -1036,7 +1036,8 @@ const stopTimer = (saveRemaining) => {
 
 let pausePollInterval = null;
 let isPaused = false;
-let pausedTimeLeft = null; // stores remaining seconds when paused
+let pausedTimeLeft = null;
+let isClassLeader = false; // first student to join becomes class leader and pushes question progress
 
 const setOverlay = (show) => {
   const overlay = document.getElementById("pause-overlay");
@@ -1067,7 +1068,7 @@ function applyPauseState(paused, timerStart) {
   }
 }
 
-function startPollPause(initialTimerStart) {
+function startPollPause() {
   clearInterval(pausePollInterval);
   isPaused = false;
   setOverlay(false);
@@ -1108,7 +1109,19 @@ function startPollPause(initialTimerStart) {
       }
     }
 
-    // Only sync pause/resume — each student controls their own question progress
+    // Late joiners follow class leader's question progress
+    if (!isClassLeader && row) {
+      const remoteQ = row.current_question || 0;
+      if (remoteQ > currentQ) {
+        isPaused = false;
+        setOverlay(false);
+        stopTimer();
+        currentQ = remoteQ;
+        loadQuestion(tStart);
+        return;
+      }
+    }
+
     applyPauseState(paused, tStart);
   }, 3000);
 }
@@ -1116,6 +1129,8 @@ function startPollPause(initialTimerStart) {
 const stopPollPause = () => {
   clearInterval(pausePollInterval);
   isPaused = false;
+  pausedTimeLeft = null;
+  isClassLeader = false;
   setOverlay(false);
 };
 
@@ -1162,28 +1177,41 @@ const beginQuiz = async () => {
   document.getElementById("quiz-username-screen").style.display = "none";
   document.getElementById("quiz-main-screen").style.display = "block";
 
-  // Fetch from Supabase for accurate cross-device late joiner sync
-  let classQ = 0,
+  score = 0;
+  pausedTimeLeft = null;
+  isClassLeader = false;
+  setOverlay(false);
+
+  const row = await sbGetQuizState(activeQuizData.id);
+  let startQ = 0,
     tStart = null,
     startPaused = false;
-  const row = await sbGetQuizState(activeQuizData.id);
+
   if (row) {
-    classQ = row.current_question || 0;
-    tStart = row.timer_start || null;
     startPaused = row.paused === true;
+    startQ = row.current_question || 0;
+    tStart = row.timer_start || null;
   } else {
     const stored = localStorage.getItem("ls_quiz_" + activeQuizData.id);
     if (stored) {
       const p = JSON.parse(stored);
-      classQ = p.currentQuestion || 0;
-      tStart = p.timerStart || null;
       startPaused = p.paused === true;
+      startQ = p.currentQuestion || 0;
+      tStart = p.timerStart || null;
     }
   }
 
-  currentQ = classQ;
-  score = 0;
-  setOverlay(false);
+  // First student (Q=0, no timer yet) becomes class leader
+  // Late joiners sync to current question + timer
+  if (startQ === 0 && !tStart) {
+    isClassLeader = true;
+    currentQ = 0;
+    tStart = null; // loadQuestion will generate fresh timer
+  } else {
+    // Late joiner — sync to class current question and remaining timer
+    isClassLeader = false;
+    currentQ = startQ;
+  }
 
   if (startPaused) {
     isPaused = true;
@@ -1193,7 +1221,7 @@ const beginQuiz = async () => {
   } else {
     loadQuestion(tStart);
   }
-  startPollPause(tStart);
+  startPollPause();
 };
 
 function loadQuestion(tStart) {
@@ -1219,7 +1247,7 @@ function loadQuestion(tStart) {
     tStart = new Date().toISOString();
   }
 
-  // Save to localStorage only — each student manages their own progress
+  // Save to localStorage
   const storedQ = localStorage.getItem("ls_quiz_" + activeQuizData.id);
   if (storedQ) {
     const parsedQ = JSON.parse(storedQ);
@@ -1229,6 +1257,22 @@ function loadQuestion(tStart) {
       "ls_quiz_" + activeQuizData.id,
       JSON.stringify(parsedQ),
     );
+  }
+
+  // Only class leader pushes progress to Supabase for late joiner sync
+  if (isClassLeader) {
+    const sb = getSB();
+    if (sb) {
+      sb.from("quiz_state")
+        .update({
+          current_question: currentQ,
+          timer_start: tStart,
+        })
+        .eq("quiz_id", activeQuizData.id)
+        .then(({ error }) => {
+          if (error) console.warn("Supabase question sync:", error.message);
+        });
+    }
   }
 
   const opts = document.getElementById("options");
