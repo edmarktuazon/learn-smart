@@ -150,20 +150,13 @@ header {
 .logo-wrap {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 16px;
   margin-bottom: 12px;
 }
 
-.logo-icon {
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(135deg, var(--blue-dark), var(--blue-light));
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.8rem;
-  box-shadow: 0 0 24px rgba(59, 130, 246, 0.5);
+.logo-icon img {
+  height: 80px;
 }
 
 h1 {
@@ -319,8 +312,8 @@ nav {
 }
 
 .tab-btn {
-  display: flex;
-  align-items: center;
+  /* display: flex;
+  align-items: center; */
   gap: 8px;
   padding: 10px 22px;
   background: var(--surface);
@@ -467,8 +460,8 @@ iframe {
 }
 
 .lesson-card-header {
-  display: flex;
-  align-items: center;
+  /* display: flex;
+  align-items: center; */
   justify-content: space-between;
   padding: 20px 24px;
   cursor: pointer;
@@ -483,11 +476,12 @@ iframe {
 .lesson-card-left {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 16px;
 }
 
-.lesson-icon {
-  font-size: 2rem;
+.lesson-icon span i {
+  font-size: 1rem;
 }
 
 .lesson-card-left h3 {
@@ -585,9 +579,9 @@ iframe {
 }
 
 .video-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  /* display: flex;
+  align-items: center; */
+  /* justify-content: space-between; */
   padding: 20px 24px;
   cursor: pointer;
   user-select: none;
@@ -1050,7 +1044,7 @@ footer {
     padding: 28px 18px;
   }
   .tab-btn span.label {
-    display: none;
+    display: block;
   }
 }
 
@@ -1079,4 +1073,35 @@ footer {
 }
 .feature-card:nth-child(4) {
   animation-delay: 0.26s;
+}
+
+/* ── Pause Overlay ── */
+.pause-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 8, 15, 0.93);
+  z-index: 9999;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  text-align: center;
+  padding: 32px;
+}
+.pause-icon {
+  font-size: 3.5rem;
+}
+.pause-title {
+  font-family: "Orbitron", monospace;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #f59e0b;
+  letter-spacing: 1px;
+}
+.pause-sub {
+  font-size: 0.95rem;
+  color: #7a90b8;
+  max-width: 320px;
+  line-height: 1.6;
 }

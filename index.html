@@ -11,13 +11,24 @@
       href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap"
       rel="stylesheet"
     />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./js/index.js" defer></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+      integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
   </head>
   <body>
     <div class="particles" id="particles"></div>
 
     <header>
       <div class="logo-wrap fade-up">
-        <div class="logo-icon">⚛️</div>
+        <div class="logo-icon">
+          <img src="./assets/logo.jfif" alt="logo" />
+        </div>
         <h1>
           <span class="learn">LEARN</span> <span class="smart">SMART</span>
         </h1>
@@ -30,11 +41,11 @@
     <section id="landing">
       <div class="landing-hero">
         <p class="hero-title fade-up" style="animation-delay: 0.15s">
-          ✦ What's Inside ✦
+          What's Inside
         </p>
         <div class="features-grid">
           <div class="feature-card fade-up" onclick="enterApp('lessons')">
-            <span class="feature-icon">📘</span>
+            <span class="feature-icon"></span>
             <h3>Lesson Content</h3>
             <p>
               Access all lesson slides anytime — no code needed. Learn at your
@@ -42,14 +53,14 @@
             </p>
           </div>
           <div class="feature-card fade-up" onclick="enterApp('videos')">
-            <span class="feature-icon">🎬</span>
+            <span class="feature-icon"></span>
             <h3>Video Lessons</h3>
             <p>
               Watch curated science videos anytime. Visual learning made easy.
             </p>
           </div>
           <div class="feature-card fade-up" onclick="enterApp('quiz')">
-            <span class="feature-icon">🧪</span>
+            <span class="feature-icon"></span>
             <h3>Interactive Quiz</h3>
             <p>
               Take quizzes opened by your admin. Enter a code, choose a name,
@@ -57,13 +68,13 @@
             </p>
           </div>
           <div class="feature-card fade-up" onclick="enterApp('discussion')">
-            <span class="feature-icon">🧬</span>
+            <span class="feature-icon"></span>
             <h3>Open Discussion</h3>
             <p>Share thoughts, ask questions, and learn together as a class.</p>
           </div>
         </div>
         <button class="enter-btn" onclick="enterApp('lessons')">
-          Enter the Classroom →
+          Enter the Classroom
         </button>
       </div>
     </section>
@@ -75,13 +86,13 @@
           data-tab="lessons"
           onclick="switchTab('lessons')"
         >
-          <span class="icon">📘</span> <span class="label">Lesson Content</span>
+          <span class="label">Lesson Content</span>
         </button>
         <button class="tab-btn" data-tab="videos" onclick="switchTab('videos')">
-          <span class="icon">🎬</span> <span class="label">Video Lessons</span>
+          <span class="label">Video Lessons</span>
         </button>
         <button class="tab-btn" data-tab="quiz" onclick="switchTab('quiz')">
-          <span class="icon">🧪</span>
+          <span class="icon"></span>
           <span class="label">Interactive Quiz</span>
         </button>
         <button
@@ -89,7 +100,7 @@
           data-tab="discussion"
           onclick="switchTab('discussion')"
         >
-          <span class="icon">🧬</span> <span class="label">Discussion</span>
+          <span class="label">Discussion</span>
         </button>
       </nav>
 
@@ -100,13 +111,15 @@
             <div class="lesson-card">
               <div class="lesson-card-header" onclick="toggleLesson(this)">
                 <div class="lesson-card-left">
-                  <span class="lesson-icon">📄</span>
                   <div>
                     <h3>Cell Structure and Functions</h3>
                     <p class="lesson-sub">Click to view lesson PDF</p>
                   </div>
+                  <span class="lesson-icon"
+                    ><i class="fa-solid fa-chevron-down"></i
+                  ></span>
                 </div>
-                <span class="lesson-chevron">▾</span>
+                <span class="lesson-chevron"></span>
               </div>
               <div class="lesson-card-body">
                 <div class="pdf-toolbar">
@@ -115,13 +128,13 @@
                     href="./assets/pdf/Cell Structure and Functions.pdf"
                     download
                     target="_blank"
-                    >⬇ Download PDF</a
+                    >Download PDF</a
                   >
                   <a
                     class="pdf-dl-btn"
                     href="./assets/pdf/Cell Structure and Functions.pdf"
                     target="_blank"
-                    >↗ Open in new tab</a
+                    >Open in new tab</a
                   >
                 </div>
                 <div class="pdf-viewer-wrap">
@@ -137,13 +150,14 @@
             <div class="lesson-card">
               <div class="lesson-card-header" onclick="toggleLesson(this)">
                 <div class="lesson-card-left">
-                  <span class="lesson-icon">📄</span>
                   <div>
                     <h3>Earth's Layers</h3>
                     <p class="lesson-sub">Click to view lesson PDF</p>
                   </div>
+                  <span class="lesson-icon"
+                    ><i class="fa-solid fa-chevron-down"></i
+                  ></span>
                 </div>
-                <span class="lesson-chevron">▾</span>
               </div>
               <div class="lesson-card-body">
                 <div class="pdf-toolbar">
@@ -152,13 +166,15 @@
                     href="./assets/pdf/Earth Layers.pdf"
                     download
                     target="_blank"
-                    >⬇ Download PDF</a
+                  >
+                    Download PDF</a
                   >
                   <a
                     class="pdf-dl-btn"
                     href="./assets/pdf/Earth Layers.pdf"
                     target="_blank"
-                    >↗ Open in new tab</a
+                  >
+                    Open in new tab</a
                   >
                 </div>
                 <div class="pdf-viewer-wrap">
@@ -174,13 +190,14 @@
             <div class="lesson-card">
               <div class="lesson-card-header" onclick="toggleLesson(this)">
                 <div class="lesson-card-left">
-                  <span class="lesson-icon">📄</span>
                   <div>
                     <h3>Rocks and the Rock Cycle</h3>
                     <p class="lesson-sub">Click to view lesson PDF</p>
                   </div>
+                  <span class="lesson-icon"
+                    ><i class="fa-solid fa-chevron-down"></i
+                  ></span>
                 </div>
-                <span class="lesson-chevron">▾</span>
               </div>
               <div class="lesson-card-body">
                 <div class="pdf-toolbar">
@@ -189,13 +206,15 @@
                     href="./assets/pdf/Rocks and the Rock Cycle.pdf"
                     download
                     target="_blank"
-                    >⬇ Download PDF</a
+                  >
+                    Download PDF</a
                   >
                   <a
                     class="pdf-dl-btn"
                     href="./assets/pdf/Rocks and the Rock Cycle.pdf"
                     target="_blank"
-                    >↗ Open in new tab</a
+                  >
+                    Open in new tab</a
                   >
                 </div>
                 <div class="pdf-viewer-wrap">
@@ -211,13 +230,14 @@
             <div class="lesson-card">
               <div class="lesson-card-header" onclick="toggleLesson(this)">
                 <div class="lesson-card-left">
-                  <span class="lesson-icon">📄</span>
                   <div>
                     <h3>Weathering and Erosion</h3>
                     <p class="lesson-sub">Click to view lesson PDF</p>
                   </div>
+                  <span class="lesson-icon"
+                    ><i class="fa-solid fa-chevron-down"></i
+                  ></span>
                 </div>
-                <span class="lesson-chevron">▾</span>
               </div>
               <div class="lesson-card-body">
                 <div class="pdf-toolbar">
@@ -226,13 +246,15 @@
                     href="./assets/pdf/Weathering and Erosion.pdf"
                     download
                     target="_blank"
-                    >⬇ Download PDF</a
+                  >
+                    Download PDF</a
                   >
                   <a
                     class="pdf-dl-btn"
                     href="./assets/pdf/Weathering and Erosion.pdf"
                     target="_blank"
-                    >↗ Open in new tab</a
+                  >
+                    Open in new tab</a
                   >
                 </div>
                 <div class="pdf-viewer-wrap">
@@ -253,13 +275,13 @@
             <div class="video-card">
               <div class="video-card-header" onclick="toggleVideo(this)">
                 <div class="video-card-left">
-                  <span class="video-thumb-icon">🎬</span>
+                  <span class="video-thumb-icon"></span>
                   <div>
                     <h3>Cell Structure and Functions</h3>
                     <p class="video-sub">Click to watch the video lesson</p>
                   </div>
                 </div>
-                <span class="video-chevron">▾</span>
+                <span class="video-chevron"></span>
               </div>
               <div class="video-card-body">
                 <video
@@ -280,13 +302,13 @@
             <div class="video-card">
               <div class="video-card-header" onclick="toggleVideo(this)">
                 <div class="video-card-left">
-                  <span class="video-thumb-icon">🎬</span>
+                  <span class="video-thumb-icon"></span>
                   <div>
                     <h3>Earth's Layers</h3>
                     <p class="video-sub">Click to watch the video lesson</p>
                   </div>
                 </div>
-                <span class="video-chevron">▾</span>
+                <span class="video-chevron"></span>
               </div>
               <div class="video-card-body">
                 <video
@@ -307,13 +329,13 @@
             <div class="video-card">
               <div class="video-card-header" onclick="toggleVideo(this)">
                 <div class="video-card-left">
-                  <span class="video-thumb-icon">🎬</span>
+                  <span class="video-thumb-icon"></span>
                   <div>
                     <h3>Rocks and the Rock Cycle</h3>
                     <p class="video-sub">Click to watch the video lesson</p>
                   </div>
                 </div>
-                <span class="video-chevron">▾</span>
+                <span class="video-chevron"></span>
               </div>
               <div class="video-card-body">
                 <video
@@ -334,13 +356,13 @@
             <div class="video-card">
               <div class="video-card-header" onclick="toggleVideo(this)">
                 <div class="video-card-left">
-                  <span class="video-thumb-icon">🎬</span>
+                  <span class="video-thumb-icon"></span>
                   <div>
                     <h3>Weathering and Erosion</h3>
                     <p class="video-sub">Click to watch the video lesson</p>
                   </div>
                 </div>
-                <span class="video-chevron">▾</span>
+                <span class="video-chevron"></span>
               </div>
               <div class="video-card-body">
                 <video
@@ -413,10 +435,10 @@
               >
                 <!-- Pause overlay -->
                 <div class="pause-overlay" id="pause-overlay">
-                  <div class="pause-icon">⏸</div>
+                  <div class="pause-icon"></div>
                   <div class="pause-title">Quiz Paused by Admin</div>
                   <div class="pause-sub">
-                    Please wait. Your teacher will resume the quiz shortly.
+                    Please wait. Your admin will resume the quiz shortly.
                   </div>
                 </div>
                 <div class="progress-bar"><div id="progress-fill"></div></div>
@@ -448,9 +470,43 @@
               </div>
             </div>
 
+            <div id="quiz-ended-screen" style="display: none">
+              <div
+                class="quiz-box"
+                style="text-align: center; padding: 40px 24px"
+              >
+                <div style="font-size: 3rem; margin-bottom: 16px"></div>
+                <h3
+                  style="
+                    font-family: &quot;Orbitron&quot;, monospace;
+                    font-size: 1.1rem;
+                    color: #f87171;
+                    margin-bottom: 12px;
+                    letter-spacing: 1px;
+                  "
+                >
+                  QUIZ ENDED
+                </h3>
+                <p
+                  style="
+                    color: #94a3b8;
+                    font-size: 0.95rem;
+                    line-height: 1.6;
+                    margin-bottom: 28px;
+                  "
+                >
+                  Your admin has ended this quiz session.<br />Thank you for
+                  participating!
+                </p>
+                <button class="btn btn-full" onclick="resetQuiz()">
+                  ← Back to Quiz List
+                </button>
+              </div>
+            </div>
+
             <div id="quiz-results-screen" style="display: none">
               <div class="quiz-box">
-                <div class="result-emoji" id="result-emoji">🏆</div>
+                <div class="result-emoji" id="result-emoji"></div>
                 <div class="result-score">
                   <span id="final-score">0</span>/<span id="final-total"
                     >20</span
@@ -496,9 +552,7 @@
     </div>
 
     <footer>
-      <p>© 2026 LEARN SMART &nbsp;•&nbsp; Science Made Simple 🔬</p>
+      <p>© 2026 LEARN SMART &nbsp;•&nbsp; Science Made Simple</p>
     </footer>
-
-    <script src="./js/index..js"></script>
   </body>
 </html>

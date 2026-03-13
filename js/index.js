@@ -1,3 +1,30 @@
+//  SUPABASE CONFIG — fill in your credentials
+const SUPABASE_URL = "https://sdyncmylgvmcsqpqnsjt.supabase.co";
+const SUPABASE_ANON =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkeW5jbXlsZ3ZtY3NxcHFuc2p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNzcxMTQsImV4cCI6MjA4ODk1MzExNH0.E7KG1mJftBI_zqHPkxr8oWGk-eVGYAJml-DF9zXBf9w";
+
+let _supabase = null;
+function getSB() {
+  if (!_supabase && window.supabase?.createClient)
+    _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  return _supabase;
+}
+
+const sbGetQuizState = async (quizId) => {
+  const sb = getSB();
+  if (!sb) return null;
+  try {
+    const { data, error } = await sb
+      .from("quiz_state")
+      .select("*")
+      .eq("quiz_id", quizId)
+      .single();
+    return !error && data ? data : null;
+  } catch {
+    return null;
+  }
+};
+
 function toggleVideo(header) {
   const card = header.closest(".video-card");
   const body = card.querySelector(".video-card-body");
@@ -46,20 +73,7 @@ function toggleLesson(header) {
   }
 }
 
-const EMOJIS = [
-  "⚛",
-  "🔬",
-  "🧪",
-  "🧬",
-  "🌡",
-  "💡",
-  "🔭",
-  "🌊",
-  "⚡",
-  "🧲",
-  "🌿",
-  "🦠",
-];
+const EMOJIS = ["", "", "", "", "", "", "", "", "", "", "", ""];
 const container = document.getElementById("particles");
 for (let i = 0; i < 18; i++) {
   const p = document.createElement("div");
@@ -87,7 +101,9 @@ function switchTab(tabId) {
     .forEach((b) => b.classList.remove("active"));
   document.getElementById(tabId).classList.add("active");
   document.querySelector(`[data-tab="${tabId}"]`).classList.add("active");
-  if (tabId === "quiz") renderQuizList();
+  if (tabId === "quiz") {
+    fetchQuizStatusFromSupabase().then(() => renderQuizList());
+  }
 }
 
 const DEFAULT_QUIZZES = [
@@ -875,24 +891,53 @@ const DEFAULT_QUIZZES = [
   },
 ];
 
-function getQuizzes() {
-  const all = [];
-  DEFAULT_QUIZZES.forEach((dq) => {
+function getQuizzesFromLocal() {
+  return DEFAULT_QUIZZES.map((dq) => {
     const stored = localStorage.getItem("ls_quiz_" + dq.id);
     if (stored) {
       const parsed = JSON.parse(stored);
-      all.push({
+      return {
         ...dq,
         status: parsed.status || dq.status,
         code: parsed.code || dq.code,
         paused: parsed.paused || false,
         currentQuestion: parsed.currentQuestion || 0,
-      });
-    } else {
-      all.push(dq);
+      };
     }
+    return { ...dq };
   });
-  return all;
+}
+
+const fetchQuizStatusFromSupabase = async () => {
+  const sb = getSB();
+  if (!sb) return null;
+  try {
+    const { data, error } = await sb
+      .from("quiz_state")
+      .select("quiz_id,status,code,paused,current_question,timer_start");
+    if (error || !data) return null;
+    // Overwrite localStorage entirely from Supabase — never let stale data persist
+    data.forEach((row) => {
+      localStorage.setItem(
+        "ls_quiz_" + row.quiz_id,
+        JSON.stringify({
+          id: row.quiz_id,
+          status: row.status,
+          code: row.code,
+          paused: row.paused,
+          currentQuestion: row.current_question || 0,
+          timerStart: row.timer_start || null,
+        }),
+      );
+    });
+    return data;
+  } catch {
+    return null;
+  }
+};
+
+function getQuizzes() {
+  return getQuizzesFromLocal();
 }
 
 let activeQuizData = null;
@@ -900,7 +945,7 @@ let currentQ = 0;
 let score = 0;
 let playerName = "Anonymous";
 
-function renderQuizList() {
+const renderQuizList = () => {
   const quizzes = getQuizzes();
   const list = document.getElementById("quiz-list");
   list.innerHTML = "";
@@ -911,7 +956,7 @@ function renderQuizList() {
     item.innerHTML = `
       <div class="quiz-item-info">
         <h4>${quiz.title}</h4>
-        <p>${isOpen ? "🟢 Quiz is open — enter code to begin" : "🔒 Waiting for teacher to open this quiz"}</p>
+        <p>${isOpen ? " Quiz is open — enter code to begin" : " Waiting for admin to open this quiz"}</p>
       </div>
       <span class="quiz-badge ${isOpen ? "badge-open" : "badge-locked"}">${isOpen ? "OPEN" : "LOCKED"}</span>
     `;
@@ -924,14 +969,14 @@ function renderQuizList() {
     }
     list.appendChild(item);
   });
-}
+};
 
-function selectQuiz(quiz) {
+const selectQuiz = (quiz) => {
   activeQuizData = quiz;
   document.getElementById("quiz-select").style.display = "none";
   document.getElementById("selected-quiz-title").textContent = quiz.title;
   document.getElementById("quiz-code-screen").style.display = "block";
-}
+};
 
 function backToSelect() {
   document.getElementById("quiz-code-screen").style.display = "none";
@@ -948,62 +993,86 @@ function checkCode() {
     document.getElementById("quiz-code-screen").style.display = "none";
     document.getElementById("quiz-username-screen").style.display = "block";
   } else {
-    alert("❌ Wrong code. Ask your teacher for the correct quiz code.");
+    alert(" Wrong code. Ask your admin for the correct quiz code.");
   }
 }
 
-// ── Timer ──────────────────────────────────────────
 const TIMER_SECONDS = 15;
 const CIRCUMFERENCE = 113.1;
 let timerInterval = null;
 
-function startTimer() {
+function startTimer(timerStart) {
   clearInterval(timerInterval);
-  let timeLeft = TIMER_SECONDS;
-  updateTimerUI(timeLeft);
-  timerInterval = setInterval(() => {
-    timeLeft--;
+  timerInterval = null;
+  // Compute from server timestamp so all devices stay in sync
+  const startMs = timerStart ? new Date(timerStart).getTime() : Date.now();
+  let expired = false; // guard against double timeExpired calls
+  function tick() {
+    const timeLeft = Math.max(
+      0,
+      TIMER_SECONDS - Math.floor((Date.now() - startMs) / 1000),
+    );
     updateTimerUI(timeLeft);
-    if (timeLeft <= 0) {
+    if (timeLeft <= 0 && !expired) {
+      expired = true;
       clearInterval(timerInterval);
+      timerInterval = null;
       timeExpired();
     }
-  }, 1000);
+  }
+  tick(); // run once immediately for instant UI update
+  timerInterval = setInterval(tick, 1000);
 }
 
-function stopTimer() {
+const stopTimer = (saveRemaining) => {
+  // If saveRemaining=true, snapshot current timer display before clearing
+  if (saveRemaining) {
+    const numEl = document.getElementById("timer-num");
+    if (numEl) pausedTimeLeft = parseInt(numEl.textContent) || null;
+  }
   clearInterval(timerInterval);
-}
+  timerInterval = null;
+};
 
-// ── Pause polling ──────────────────────────────────
 let pausePollInterval = null;
 let isPaused = false;
+let pausedTimeLeft = null; // stores remaining seconds when paused
 
-function setOverlay(show) {
+const setOverlay = (show) => {
   const overlay = document.getElementById("pause-overlay");
   if (!overlay) return;
   overlay.style.display = show ? "flex" : "none";
-}
+  // Stop timer and save remaining time when pausing
+  if (show) stopTimer(true);
+};
 
-function applyPauseState(paused) {
+function applyPauseState(paused, timerStart) {
   const shouldPause = paused === true;
   if (shouldPause && !isPaused) {
     isPaused = true;
-    stopTimer();
-    setOverlay(true);
+    setOverlay(true); // setOverlay(true) calls stopTimer(true) which saves pausedTimeLeft
   } else if (!shouldPause && isPaused) {
     isPaused = false;
     setOverlay(false);
-    startTimer(); // fresh 15s on resume
+    // Resume from where it was paused — compute a fake startMs so remaining = pausedTimeLeft
+    if (pausedTimeLeft !== null) {
+      const fakeStart = new Date(
+        Date.now() - (TIMER_SECONDS - pausedTimeLeft) * 1000,
+      ).toISOString();
+      pausedTimeLeft = null;
+      startTimer(fakeStart);
+    } else {
+      startTimer(timerStart);
+    }
   }
 }
 
-function startPollPause() {
+function startPollPause(initialTimerStart) {
   clearInterval(pausePollInterval);
   isPaused = false;
   setOverlay(false);
 
-  // Immediate check — don't wait 2 seconds
+  // Immediate check (localStorage fallback)
   const storedInit = localStorage.getItem("ls_quiz_" + activeQuizData.id);
   if (storedInit) {
     const parsedInit = JSON.parse(storedInit);
@@ -1014,22 +1083,55 @@ function startPollPause() {
     }
   }
 
-  pausePollInterval = setInterval(() => {
-    const stored = localStorage.getItem("ls_quiz_" + activeQuizData.id);
-    if (!stored) return;
-    const parsed = JSON.parse(stored);
-    applyPauseState(parsed.paused === true);
-  }, 2000);
+  pausePollInterval = setInterval(async () => {
+    // Try Supabase first for cross-device sync
+    let row = await sbGetQuizState(activeQuizData.id);
+    let paused, tStart;
+
+    let remoteQ = null;
+    if (row) {
+      paused = row.paused === true;
+      tStart = row.timer_start || null;
+      remoteQ = row.current_question || 0;
+    } else {
+      const stored = localStorage.getItem("ls_quiz_" + activeQuizData.id);
+      if (!stored) return;
+      const parsed = JSON.parse(stored);
+      paused = parsed.paused === true;
+      tStart = parsed.timerStart || null;
+      remoteQ = parsed.currentQuestion || 0;
+    }
+
+    // Quiz locked mid-session
+    if (row && row.status === "locked") {
+      const mainScreen = document.getElementById("quiz-main-screen");
+      if (mainScreen && mainScreen.style.display !== "none") {
+        showQuizEnded();
+        return;
+      }
+    }
+
+    // Jump forward if class is ahead — never go backward
+    if (remoteQ !== null && remoteQ > currentQ) {
+      isPaused = false;
+      setOverlay(false);
+      stopTimer();
+      currentQ = remoteQ;
+      loadQuestion(tStart);
+      return;
+    }
+
+    applyPauseState(paused, tStart);
+  }, 3000);
 }
 
-function stopPollPause() {
+const stopPollPause = () => {
   clearInterval(pausePollInterval);
   isPaused = false;
   setOverlay(false);
-}
-// ──────────────────────────────────────────────────
+};
 
-function updateTimerUI(t) {
+const updateTimerUI = (t) => {
   const arc = document.getElementById("timer-arc");
   const num = document.getElementById("timer-num");
   if (!arc || !num) return;
@@ -1041,9 +1143,9 @@ function updateTimerUI(t) {
   arc.classList.toggle("danger", danger);
   num.classList.toggle("warn", warn);
   num.classList.toggle("danger", danger);
-}
+};
 
-function timeExpired() {
+const timeExpired = () => {
   const opts = document.getElementById("options");
   if (!opts) return;
   [...opts.children].forEach((b) => {
@@ -1053,27 +1155,51 @@ function timeExpired() {
   if (opts.children[q.a]) opts.children[q.a].classList.add("correct");
   setTimeout(() => {
     currentQ++;
-    loadQuestion();
+    loadQuestion(null);
   }, 1000);
-}
-// ──────────────────────────────────────────────────
+};
 
-function beginQuiz() {
+const beginQuiz = async () => {
   playerName =
     document.getElementById("username-input").value.trim() || "Anonymous";
   document.getElementById("quiz-username-screen").style.display = "none";
   document.getElementById("quiz-main-screen").style.display = "block";
-  // Sync to class's current question (late joiner support)
-  const stored = localStorage.getItem("ls_quiz_" + activeQuizData.id);
-  const classQ = stored ? JSON.parse(stored).currentQuestion || 0 : 0;
+
+  // Fetch from Supabase for accurate cross-device late joiner sync
+  let classQ = 0,
+    tStart = null,
+    startPaused = false;
+  const row = await sbGetQuizState(activeQuizData.id);
+  if (row) {
+    classQ = row.current_question || 0;
+    tStart = row.timer_start || null;
+    startPaused = row.paused === true;
+  } else {
+    const stored = localStorage.getItem("ls_quiz_" + activeQuizData.id);
+    if (stored) {
+      const p = JSON.parse(stored);
+      classQ = p.currentQuestion || 0;
+      tStart = p.timerStart || null;
+      startPaused = p.paused === true;
+    }
+  }
+
   currentQ = classQ;
   score = 0;
-  setOverlay(false); // always start with overlay hidden
-  loadQuestion();
-  startPollPause();
-}
+  setOverlay(false);
 
-function loadQuestion() {
+  if (startPaused) {
+    isPaused = true;
+    loadQuestion(tStart);
+    stopTimer();
+    setOverlay(true);
+  } else {
+    loadQuestion(tStart);
+  }
+  startPollPause(tStart);
+};
+
+function loadQuestion(tStart) {
   const questions = activeQuizData.questions;
   if (currentQ >= questions.length) {
     showResults();
@@ -1087,15 +1213,39 @@ function loadQuestion() {
     `${((currentQ + 1) / questions.length) * 100}%`;
   document.getElementById("score-display").textContent = `Score: ${score}`;
 
-  // Broadcast current question number so late joiners can sync
+  pausedTimeLeft = null;
+  // If no tStart or tStart is stale (older than TIMER_SECONDS), generate a fresh one
+  if (
+    !tStart ||
+    Date.now() - new Date(tStart).getTime() > TIMER_SECONDS * 1000
+  ) {
+    tStart = new Date().toISOString();
+  }
+
+  // Save currentQuestion + timerStart to localStorage AND Supabase for late joiner sync
   const storedQ = localStorage.getItem("ls_quiz_" + activeQuizData.id);
   if (storedQ) {
     const parsedQ = JSON.parse(storedQ);
     parsedQ.currentQuestion = currentQ;
+    parsedQ.timerStart = tStart;
     localStorage.setItem(
       "ls_quiz_" + activeQuizData.id,
       JSON.stringify(parsedQ),
     );
+  }
+
+  // Push to Supabase so all devices see the latest question + timer
+  const sb = getSB();
+  if (sb) {
+    sb.from("quiz_state")
+      .update({
+        current_question: currentQ,
+        timer_start: tStart,
+      })
+      .eq("quiz_id", activeQuizData.id)
+      .then(({ error }) => {
+        if (error) console.warn("Supabase question sync error:", error.message);
+      });
   }
 
   const opts = document.getElementById("options");
@@ -1118,16 +1268,16 @@ function loadQuestion() {
       }
       setTimeout(() => {
         currentQ++;
-        loadQuestion();
+        loadQuestion(null); // null = generate fresh timerStart for new question
       }, 900);
     };
     opts.appendChild(btn);
   });
 
-  startTimer();
+  if (!isPaused) startTimer(tStart);
 }
 
-function showResults() {
+const showResults = () => {
   stopTimer();
   stopPollPause();
   document.getElementById("quiz-main-screen").style.display = "none";
@@ -1139,21 +1289,38 @@ function showResults() {
   document.getElementById("final-total").textContent = total;
   document.getElementById("result-pct").textContent = `${pct}% correct`;
 
-  let emoji = "📚",
+  let emoji = "",
     msg = "Don't worry — practice makes perfect!";
   if (pct >= 90) {
-    emoji = "🏆";
+    emoji = "";
     msg = "Excellent! You're a science star!";
   } else if (pct >= 70) {
-    emoji = "🌟";
+    emoji = "";
     msg = "Very good! You're doing great.";
   } else if (pct >= 50) {
-    emoji = "👍";
+    emoji = "";
     msg = "Not bad! Review a bit more.";
   }
   document.getElementById("result-emoji").textContent = emoji;
   document.getElementById("result-msg").textContent = msg;
 
+  // Save to Supabase leaderboard
+  const sb = getSB();
+  if (sb) {
+    sb.from("leaderboard")
+      .insert({
+        quiz_id: activeQuizData.id,
+        player_name: playerName,
+        score: score,
+        total: total,
+        pct: pct,
+      })
+      .then(({ error }) => {
+        if (error) console.warn("Leaderboard save error:", error.message);
+      });
+  }
+
+  // Also save to localStorage as fallback + show top 3 from Supabase
   const lbKey = "ls_lb_" + activeQuizData.id;
   let lb = JSON.parse(localStorage.getItem(lbKey)) || [];
   lb.push({ name: playerName, score, pct });
@@ -1161,33 +1328,59 @@ function showResults() {
   lb = lb.slice(0, 3);
   localStorage.setItem(lbKey, JSON.stringify(lb));
 
+  // Try to show top 3 from Supabase, fallback to localStorage
   const ul = document.getElementById("leaderboard");
-  ul.innerHTML = lb
-    .map(
-      (e, i) => `
-    <li class="lb-item">
-      <span class="lb-rank">${["🥇", "🥈", "🥉"][i]}</span>
-      <span class="lb-name">${e.name}</span>
-      <span class="lb-score">${e.score}/${total} (${e.pct}%)</span>
-    </li>
-  `,
-    )
-    .join("");
-}
+  const renderResultsLB = async () => {
+    let entries = lb;
+    if (sb) {
+      const { data } = await sb
+        .from("leaderboard")
+        .select("player_name,score,total,pct")
+        .eq("quiz_id", activeQuizData.id)
+        .order("score", { ascending: false })
+        .limit(3);
+      if (data && data.length)
+        entries = data.map((r) => ({
+          name: r.player_name,
+          score: r.score,
+          pct: r.pct,
+        }));
+    }
+    ul.innerHTML = entries
+      .map(
+        (e, i) => `
+      <li class="lb-item">
+        <span class="lb-rank">${["", "", ""][i] || ""}</span>
+        <span class="lb-name">${e.name}</span>
+        <span class="lb-score">${e.score}/${total} (${e.pct}%)</span>
+      </li>`,
+      )
+      .join("");
+  };
+  renderResultsLB();
+};
 
-function resetQuiz() {
+const showQuizEnded = () => {
+  stopTimer();
+  stopPollPause();
+  setOverlay(false);
+  document.getElementById("quiz-main-screen").style.display = "none";
+  document.getElementById("quiz-results-screen").style.display = "none";
+  document.getElementById("quiz-ended-screen").style.display = "block";
+};
+
+const resetQuiz = () => {
   stopTimer();
   stopPollPause();
   document.getElementById("quiz-results-screen").style.display = "none";
+  document.getElementById("quiz-ended-screen").style.display = "none";
   document.getElementById("quiz-code").value = "";
   document.getElementById("username-input").value = "";
   document.getElementById("quiz-select").style.display = "block";
   renderQuizList();
-}
+};
 
-let posts = JSON.parse(localStorage.getItem("ls_posts")) || [];
-
-function renderPosts() {
+const renderPosts = (posts) => {
   const el = document.getElementById("posts-list");
   if (!posts.length) {
     el.innerHTML =
@@ -1196,49 +1389,71 @@ function renderPosts() {
   }
   el.innerHTML = posts
     .map(
-      (p, i) => `
+      (p) => `
     <div class="post">
       <div class="post-head">
         <span class="post-anon">Anonymous</span>
-        <span>${new Date(p.time).toLocaleString("en-PH")}</span>
+        <span>${new Date(p.created_at).toLocaleString("en-PH")}</span>
       </div>
       <p>${p.message}</p>
-      <div style="text-align:right;margin-top:8px">
-        <button class="del-btn" onclick="deletePost(${i})">🗑 Delete</button>
-      </div>
     </div>
   `,
     )
     .join("");
-}
+};
 
-function addPost() {
+const fetchPosts = async () => {
+  const sb = getSB();
+  if (!sb) return;
+  const { data } = await sb
+    .from("discussion_posts")
+    .select("id,message,created_at")
+    .order("created_at", { ascending: false });
+  if (data) renderPosts(data);
+};
+
+const addPost = async () => {
   const msg = document.getElementById("post-msg").value.trim();
   if (!msg) {
     alert("Please write something first!");
     return;
   }
-  posts.unshift({ message: msg, time: Date.now() });
-  localStorage.setItem("ls_posts", JSON.stringify(posts));
-  document.getElementById("post-msg").value = "";
-  renderPosts();
-}
-
-function deletePost(i) {
-  if (!confirm("Delete this post?")) return;
-  posts.splice(i, 1);
-  localStorage.setItem("ls_posts", JSON.stringify(posts));
-  renderPosts();
-}
-
-renderPosts();
-
-setInterval(() => {
-  const quizPanel = document.getElementById("quiz");
-  if (quizPanel && quizPanel.classList.contains("active")) {
-    const selectScreen = document.getElementById("quiz-select");
-    if (selectScreen && selectScreen.style.display !== "none") {
-      renderQuizList();
-    }
+  const sb = getSB();
+  if (!sb) {
+    alert("No connection. Please try again.");
+    return;
   }
-}, 10000);
+  const { error } = await sb.from("discussion_posts").insert({ message: msg });
+  if (error) {
+    console.warn("Post error:", error.message);
+    return;
+  }
+  document.getElementById("post-msg").value = "";
+  fetchPosts();
+};
+
+fetchPosts();
+
+// Poll posts every 5s for real-time feel
+setInterval(fetchPosts, 5000);
+
+// Poll Supabase every 4s to refresh quiz open/locked status across all devices
+setInterval(async () => {
+  const quizPanel = document.getElementById("quiz");
+  const selectScreen = document.getElementById("quiz-select");
+  if (
+    quizPanel &&
+    quizPanel.classList.contains("active") &&
+    selectScreen &&
+    selectScreen.style.display !== "none"
+  ) {
+    await fetchQuizStatusFromSupabase();
+    renderQuizList();
+  }
+}, 4000);
+
+// Also fetch immediately on page load so status is accurate right away
+(async () => {
+  await fetchQuizStatusFromSupabase();
+  renderQuizList();
+})();
